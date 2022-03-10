@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+{# this is just a simple template to print some info as a result of the href link #}
+{# from the main table display #}
+
+{{ owner.name }} ({{ owner.email }})<br>
+<b>Pets:</b><br>
+{% for pet in owner.pets %}
+    {{ pet.name }} ({{ pet.type}}) age {{ pet.age }}<br>
+{% endfor %}
+<br>
+<a href="{{url_for('index')}}">Back to table</a>
+
+{% endblock %}

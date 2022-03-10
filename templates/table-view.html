@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Pet Name</th>
+        <th>Pet Age</th>
+        <th>Pet Type</th>
+        <th>Owner Name</th>
+        <th>Owner Email</th>
+      </tr>
+    </thead>
+    <tbody>   {# tbody is replaced by the ajax function from datatables #}
+    </tbody>
+          {# remember the table has to have a tfoot for footers to appear #}
+          <tfoot>
+            <tr>
+                <th></th>
+                <th>Pet Name</th>
+                <th>Pet Age</th>
+                <th>Pet Type</th>
+                <th>Owner Name</th>
+                <th>Owner Email</th>
+            </tr>
+        </tfoot>
+  </table>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+        // Add a searchbox as a footer to each column
+        // from https://datatables.net/examples/api/multi_filter.html
+        // Setup - add a text input to each footer cell
+        $('#data tfoot th').each( function (index) {
+            var title = $(this).text();
+            if (index != 0) {
+            $(this).html( '<input type="text" size="15" placeholder="Search '+title+'" />' );
+            }
+        } );
+
+      // Remember #data references the id= on the table 
+      var table = $('#data').DataTable({
+        ajax: '/api/data',   // Endpoint for ajax function to get data 
+        "order":[],  // Accepting the order sent initially to the table 
+        serverSide: true,  // Data comes from ajax function
+        columnDefs: [{
+                      // Add a column with an href link for each row  
+                      "targets": 0,   // First column
+                      "data": null,   // no data 
+                      "render": function ( data, type, row, meta ) {
+                          return '<a href="/getinfo/'+row.owner_email+'">Info</a>';
+                      }
+                }],
+        // Note these fields have prefixes on them corresonding to their model table
+        // and so don't correspond exactly like the name in the Model.  
+        // e.g. sqlalchemy "Pet.name" is in the table as "pet_name" rather than as "name"
+        // See the demo.py for why and how we do this.  
+        columns: [
+          {data: null, orderable: false},   // placeholder first column for the action href's 
+          {data: 'pet_name', orderable: true},
+          {data: 'pet_age', orderable: true},
+          {data: 'pet_type', orderable: true},
+          {data: 'owner_name', orderable: true},
+          {data: 'owner_email', orderable: true}
+        ],
+        initComplete: function () {
+            // Apply the search function for each column to the input boxes in the footers
+            // https://datatables.net/examples/api/multi_filter.html
+            this.api().columns().every( function (index) {
+                var that = this;
+                $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                    if ( that.search() !== this.value ) {
+                        that
+                            .search( this.value )
+                            .draw();
+                    }
+                } );
+            } );
+        }
+      });
+    });
+  </script>
+{% endblock %}
